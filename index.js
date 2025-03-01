@@ -4,6 +4,7 @@ const { SocksProxyAgent } = require('socks-proxy-agent');
 const fs = require('fs').promises;
 const path = require('path');
 const config = require('./config');
+const AsyncQueue = require('async/queue'); // npm install async လုပ်ရမယ်
 
 const apiBaseUrl = "https://gateway-run.bls.dev/api/v1";
 let connectionOption;
@@ -34,8 +35,6 @@ async function promptConnectionOption() {
     });
 
     return new Promise(resolve => {
-        // ANSI escape code for red text: \x1b[31m
-        // ANSI escape code to reset color: \x1b[0m
         const redText = '\x1b[31m3. Fake IP (Don\'t use this)\x1b[0m';
         rl.question(`Connection options:\n1. Use proxy\n2. No proxy\n${redText}\nChoose an option (1/2/3): `, answer => {
             rl.close();
@@ -117,539 +116,7 @@ function generateRandomHardwareInfo() {
         "AMD Ryzen 3 1300X", "Intel Core i7-9750H", "AMD Ryzen 5 4600H",
         "Intel Core i9-10940X", "AMD Ryzen 7 2700", "Intel Core i5-9400F",
         "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400",
-        "AMD Ryzen 3 1200", "Intel Core i3-8100", "AMD Ryzen 9 5900X",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i7-10710U", "AMD Ryzen 7 2700E",
-        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300",
-        "AMD Ryzen 3 1300X", "Intel Core i9-10980HK", "AMD Ryzen 5 3600X",
-        "Intel Core i7-10700F", "AMD Ryzen 7 2700", "Intel Core i5-9400"
+        "Intel Core i5-9500", "AMD Ryzen 5 3400G", "Intel Core i3-8300"
     ];
     const cpuFeatures = ["mmx", "sse", "sse2", "sse3", "ssse3", "sse4_1", "sse4_2", "avx"];
     return {
@@ -685,6 +152,13 @@ async function registerNode(nodeId, hardwareId, ipAddress, agent, authToken) {
         await saveHardwareInfo(hardwareInfo);
     }
 
+    const requestBody = {
+        ipAddress,
+        hardwareId,
+        hardwareInfo: hardwareInfo[nodeId],
+        extensionVersion: "0.1.7"
+    };
+
     const response = await fetch(registerUrl, {
         method: "POST",
         headers: {
@@ -692,12 +166,7 @@ async function registerNode(nodeId, hardwareId, ipAddress, agent, authToken) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`
         },
-        body: JSON.stringify({
-            ipAddress,
-            hardwareId,
-            hardwareInfo: hardwareInfo[nodeId],
-            extensionVersion: "0.1.7"
-        }),
+        body: JSON.stringify(requestBody),
         agent
     });
 
@@ -716,12 +185,14 @@ async function startSession(nodeId, agent, authToken) {
     const fetch = await loadFetch();
     const startSessionUrl = `${apiBaseUrl}/nodes/${nodeId}/start-session`;
     console.log(`[${getFormattedTime()}] Starting session for node ${nodeId}, it might take a while...`);
+
     const response = await fetch(startSessionUrl, {
         method: "POST",
         headers: {
             ...commonHeaders,
             Authorization: `Bearer ${authToken}`
         },
+        body: JSON.stringify({}),
         agent
     });
 
@@ -742,11 +213,9 @@ async function checkNodeStatus(nodeId, fetch, agent = null) {
         const response = await fetch(nodeStatusUrl, { agent, headers: commonHeaders });
         if (response.ok) {
             console.log(`[${getFormattedTime()}] Node ${nodeId} status: OK`);
-        } else {
-        //    console.error(`[${getFormattedTime()}] Node ${nodeId} status check failed with status: ${response.status}`);
         }
     } catch (error) {
-      //  console.error(`[${getFormattedTime()}] Error during node status check for node ${nodeId}: ${error.message}`);
+        // console.error(`[${getFormattedTime()}] Error during node status check for node ${nodeId}: ${error.message}`);
     }
 }
 
@@ -808,7 +277,7 @@ async function pingNode(nodeId, agent, ipAddress, authToken, pingErrorCount) {
     } catch (error) {
         const text = await response.text();
         console.error(`[${getFormattedTime()}] Failed to parse JSON. Response text:`, text);
-        pingErrorCount[node.nodeId] = (pingErrorCount[node.nodeId] || 0) + 1;
+        pingErrorCount[nodeId] = (pingErrorCount[nodeId] || 0) + 1;
         throw new Error(`Invalid JSON response: ${text}`);
     }
 }
@@ -856,7 +325,6 @@ async function processNode(node, agent, ipAddress, authToken) {
                         await pingNode(node.nodeId, agent, ipAddress, authToken, pingErrorCount);
                     } catch (error) {
                         console.error(`[${getFormattedTime()}] Error during ping: ${error.message}`);
-
                         pingErrorCount[node.nodeId] = (pingErrorCount[node.nodeId] || 0) + 1;
                         if (pingErrorCount[node.nodeId] >= MAX_PING_ERRORS) {
                             clearInterval(nodeIntervals.get(node.nodeId));
@@ -874,9 +342,12 @@ async function processNode(node, agent, ipAddress, authToken) {
             break;
 
         } catch (error) {
-            if (error.message.includes('proxy') || error.message.includes('connect') || error.message.includes('authenticate')) {
+            if (error.message.includes('body used already')) {
+                console.error(`[${getFormattedTime()}] Body used already error for nodeId: ${node.nodeId}. Retrying in 10 seconds...`);
+                await new Promise(resolve => setTimeout(resolve, 10000));
+            } else if (error.message.includes('proxy') || error.message.includes('connect') || error.message.includes('authenticate')) {
                 console.error(`[${getFormattedTime()}] Proxy error for nodeId: ${node.nodeId}, retrying in 15 minutes: ${error.message}`);
-                setTimeout(() => processNode(node, agent, ipAddress, authToken), retryDelay);
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
             } else {
                 console.error(`[${getFormattedTime()}] Error occurred for nodeId: ${node.nodeId}, restarting process in 50 seconds: ${error.message}`);
                 await new Promise(resolve => setTimeout(resolve, restartDelay));
@@ -907,8 +378,19 @@ async function runAll(initialRun = true) {
 
         await saveHardwareInfo(hardwareInfo);
 
-        const nodePromises = config.flatMap(user =>
-            user.nodes.map(async node => {
+        const nodeQueue = AsyncQueue(async (task, callback) => {
+            const { node, agent, ipAddress, authToken } = task;
+            try {
+                await processNode(node, agent, ipAddress, authToken);
+                callback();
+            } catch (error) {
+                console.error(`[${getFormattedTime()}] Error processing node ${node.nodeId}: ${error.message}`);
+                callback(error);
+            }
+        }, 1); // Concurrency = 1
+
+        config.forEach(user => {
+            user.nodes.forEach(async node => {
                 let agent = null;
                 let ipAddress = null;
 
@@ -927,24 +409,19 @@ async function runAll(initialRun = true) {
                 }
 
                 if (ipAddress) {
-                    await processNode(node, agent, ipAddress, user.usertoken).catch(error => {
-                        console.error(`[${getFormattedTime()}] Error processing node ${node.nodeId}: ${error.message}`);
-                    });
+                    nodeQueue.push({ node, agent, ipAddress, authToken: user.usertoken });
                 } else {
                     console.error(`[${getFormattedTime()}] Skipping node ${node.nodeId} due to IP fetch failure. Retrying in 15 minutes.`);
                     setTimeout(async () => {
                         ipAddress = await fetchIpAddress(fetch, agent);
                         if (ipAddress) {
-                            await processNode(node, agent, ipAddress, user.usertoken);
-                        } else {
-                            console.error(`[${getFormattedTime()}] Failed to fetch IP address again for node ${node.nodeId}.`);
+                            nodeQueue.push({ node, agent, ipAddress, authToken: user.usertoken });
                         }
                     }, retryDelay);
                 }
-            })
-        );
+            });
+        });
 
-        await Promise.allSettled(nodePromises);
     } catch (error) {
         const chalk = await import('chalk');
         console.error(chalk.default.yellow(`[${getFormattedTime()}] An error occurred: ${error.message}`));
